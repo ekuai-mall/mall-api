@@ -9,8 +9,10 @@ switch ($do[0]) {
 		$auth = new DoAuth($GLOBALS['_CONFIG']);
 		$ret = $auth->get(array_slice($do, 1 - count($do)), $_POST);
 		break;
-	case 'product':
-		
+	case 'pay':
+		include ROOT_PATH.'/core/payment.php';
+		$order = new Order($GLOBALS['_CONFIG']);
+		$ret = $order->get(array_slice($do, 1 - count($do)), $_POST);
 		break;
 	default:
 		$ret = Utils::ret(-100000, 'request denied');
