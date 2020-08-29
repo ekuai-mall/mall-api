@@ -1,10 +1,11 @@
 <?php
-include ROOT_PATH.'/plugin/auth-sys/index.php';
-include_once ROOT_PATH.'/core/utils.php';
+include ROOT_PATH . '/plugin/auth-sys/index.php';
+include_once ROOT_PATH . '/core/utils.php';
 
 class DoAuth extends Auth {
 	public function __construct($config) {
 		parent::__construct($config['DB_NAME'], $config['DB_USR'], $config['DB_PWD']);
+		$this->cookieValid = $config['COOKIE_VALID'];
 	}
 	
 	public function get($e, $params) {

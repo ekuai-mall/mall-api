@@ -4,18 +4,22 @@ include_once ROOT_PATH . '/core/utils.php';
 
 class Order extends WxPay {
 	private $empty;
+	private $cookieValid;
 	
 	public function __construct($config) {
 		parent::__construct($config['DB_NAME'], $config['DB_USR'], $config['DB_PWD']);
+		$this->cookieValid = $config['COOKIE_VALID'];
 	}
 	
 	private function buy($params) {
-		if (Utils::isEmpty($params['user'], $params['product'])) {
+		if (Utils::isEmpty($params['user'], $params['product'], $params['cookie'])) {
 			$ret = $this->empty;
 		} else {
-			$resUser = $this->query('SELECT * FROM `ekm_auth_user` WHERE `id`=?', [$params['user']]);
+			$resUser = $this->query('SELECT * FROM `ekm_auth_user` WHERE `cookie`=?', [$params['cookie']]);
 			if (empty($resUser)) {
-				$ret = Utils::ret(-310001, 'undefined user');
+				$ret = Utils::ret(-310001, 'invalid cookie');
+			} else if ($resUser[0]['login_time'] + $this->cookieValid < time()) {
+				$ret = Utils::ret(-310004, 'cookie expired');
 			} else {
 				$resItem = $this->query('SELECT * FROM `ekm_item_info` WHERE `id`=?', [$params['product']]);
 				if (empty($resItem)) {
