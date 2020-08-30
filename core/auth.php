@@ -27,10 +27,10 @@ class DoAuth extends Auth {
 				}
 				break;
 			case 'heartbeat':
-				if (Utils::isEmpty($params['cookie'])) {
+				if (Utils::isEmpty($params['id'], $params['cookie'])) {
 					$ret = $empty;
 				} else {
-					$ret = parent::heartbeat($params['cookie']);
+					$ret = parent::heartbeat($params['id'], $params['cookie']);
 				}
 				break;
 			case 'cPass':
@@ -40,6 +40,28 @@ class DoAuth extends Auth {
 					$ret = parent::changePwd($params['user'], $params['pass'], $params['nPass']);
 				}
 				break;
+			case 'getInfo':
+				if (Utils::isEmpty($params['id'], $params['cookie'])) {
+					$ret = $empty;
+				} else {
+					$ret = parent::getInfo($params['id'], $params['cookie']);
+				}
+				break;
+			case 'getWechat':
+				if (Utils::isEmpty($params['id'], $params['cookie'])) {
+					$ret = $empty;
+				} else {
+					$ret = parent::getWechat($params['id'], $params['cookie']);
+				}
+				break;
+			case 'setInfo':
+				if (Utils::isEmpty($params['id'], $params['cookie'], $params['info'])) {
+					$ret = $empty;
+				} else {
+					$ret = parent::setInfo($params['id'], $params['cookie'], $params['info']);
+				}
+				break;
+			
 			default:
 				$ret = Utils::ret(-100001, 'request denied');
 				break;
