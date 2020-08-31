@@ -61,6 +61,13 @@ class DoAuth extends Auth {
 					$ret = parent::setInfo($params['id'], $params['cookie'], $params['info']);
 				}
 				break;
+			case 'clearWechat':
+				if (Utils::isEmpty($params['id'], $params['cookie'])) {
+					$ret = $empty;
+				} else {
+					$ret = parent::setWechat($params['id'], $params['cookie'], null, null);
+				}
+				break;
 			
 			default:
 				$ret = Utils::ret(-100001, 'request denied');

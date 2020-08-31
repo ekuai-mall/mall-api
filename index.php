@@ -5,7 +5,6 @@ include_once ROOT_PATH . '/core/utils.php';
 $do = explode("/", $_GET['_']);
 $config = $GLOBALS['_CONFIG'];
 switch ($do[0]) {
-	
 	case 'auth':
 		include ROOT_PATH . '/core/auth.php';
 		$auth = new DoAuth($config);
