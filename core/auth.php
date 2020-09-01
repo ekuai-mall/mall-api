@@ -26,6 +26,13 @@ class DoAuth extends Auth {
 					$ret = parent::reg($params['user'], $params['pass']);
 				}
 				break;
+			case 'logout':
+				if (Utils::isEmpty($params['id'], $params['cookie'])) {
+					$ret = $empty;
+				} else {
+					$ret = parent::logout($params['id'], $params['cookie']);
+				}
+				break;
 			case 'heartbeat':
 				if (Utils::isEmpty($params['id'], $params['cookie'])) {
 					$ret = $empty;
