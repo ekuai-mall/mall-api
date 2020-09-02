@@ -20,6 +20,11 @@ switch ($do[0]) {
 		$item = new DoItem($config);
 		$ret = $item->get(array_slice($do, 1 - count($do)), $_POST);
 		break;
+	case 'info':
+		include ROOT_PATH . '/core/info.php';
+		$info = new Info($config);
+		$ret = $info->get(array_slice($do, 1 - count($do)), $_POST);
+		break;
 	default:
 		$ret = Utils::ret(-100000, 'request denied');
 		break;
