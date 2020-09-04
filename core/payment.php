@@ -11,25 +11,35 @@ class Order extends WxPay {
 		$this->cookieValid = $config['COOKIE_VALID'];
 	}
 	
+	private function selectCookie($userId, $cookie) {
+		return $this->query("SELECT `id`,`login_time`,`cookie` FROM `ekm_auth_user` WHERE `id` = ? AND `cookie` = ?", [$userId, $cookie]);
+	}
+	
 	private function buy($params) {
 		if (Utils::isEmpty($params['user'], $params['product'], $params['cookie'])) {
 			$ret = $this->empty;
 		} else {
-			$resUser = $this->query('SELECT * FROM `ekm_auth_user` WHERE `cookie`=?', [$params['cookie']]);
-			if (empty($resUser)) {
-				$ret = Utils::ret(-310001, 'invalid cookie');
+			$resUser = $this->selectCookie($params['user'], $params['cookie']);
+			if ($resUser === false) {
+				$ret = Utils::ret(-310001, Utils::ERR_DB);
+			} else if (empty($resUser)) {
+				$ret = Utils::ret(-310002, 'invalid cookie');
 			} else if ($resUser[0]['login_time'] + $this->cookieValid < time()) {
-				$ret = Utils::ret(-310004, 'cookie expired');
+				$ret = Utils::ret(-310003, 'cookie expired');
 			} else {
 				$resItem = $this->query('SELECT * FROM `ekm_item_info` WHERE `id`=?', [$params['product']]);
-				if (empty($resItem)) {
-					$ret = Utils::ret(-310002, 'undefined product');
+				if ($resItem === false) {
+					$ret = Utils::ret(-310004, Utils::ERR_DB);
+				} else if (empty($resItem)) {
+					$ret = Utils::ret(-310005, 'undefined product');
 				} else {
 					$resItem = $resItem[0];
 					$resProduct = $this->query('SELECT * FROM `ekm_item_main` WHERE `id`=?',
 						[$resItem['sort']]);
-					if (empty($resProduct)) {
-						$ret = Utils::ret(-310003, 'undefined sort');
+					if ($resProduct === false) {
+						$ret = Utils::ret(-310006, Utils::ERR_DB);
+					} else if (empty($resProduct)) {
+						$ret = Utils::ret(-310007, 'undefined sort');
 					} else {
 						$resProduct = $resProduct[0];
 						$ret = $this->newOrder($resItem['name'] . '-' . $resProduct['name'], $params['user'],
@@ -51,7 +61,14 @@ class Order extends WxPay {
 				if (Utils::isEmpty($params['order'])) {
 					$ret = $this->empty;
 				} else {
-					$ret = $this->checkOrder($params['order']);
+					$res = $this->query('SELECT * FROM `ekm_order` WHERE `order` = ?', [$params['order']]);
+					if ($res === false) {
+						$ret = Utils::ret(-330002, Utils::ERR_DB);
+					} else if (empty($res)) {
+						$ret = Utils::ret(-330001, 'undefined order');
+					} else {
+						$ret = $this->checkOrder($params['order']);
+					}
 				}
 				break;
 			case 'getOrder':
@@ -59,7 +76,9 @@ class Order extends WxPay {
 					$ret = $this->empty;
 				} else {
 					$order = $this->query('SELECT * FROM `ekm_order` WHERE `order` = ?', [$params['order']]);
-					if (empty($order)) {
+					if ($order === false) {
+						$ret = Utils::ret(-320002, Utils::ERR_DB);
+					} else if (empty($order)) {
 						$ret = Utils::ret(-320001, 'undefined order');
 					} else {
 						$order = $order[0];
@@ -67,6 +86,25 @@ class Order extends WxPay {
 						$resUser = $resUser[0];
 						$order['user'] = $resUser;
 						$ret = Utils::ret(0, $order);
+					}
+				}
+				break;
+			case 'getUserOrder':
+				if (Utils::isEmpty($params['user'], $params['cookie'])) {
+					$ret = $this->empty;
+				} else {
+					$res = $this->selectCookie($params['user'], $params['cookie']);
+					if ($res === false) {
+						$ret = Utils::ret(-330001, Utils::ERR_DB);
+					} else if (empty($res)) {
+						$ret = Utils::ret(-330002, Utils::ERR_COOKIE_INVALID);
+					} else {
+						$res = $this->query('SELECT * from `ekm_order` WHERE `user` = ?', [$params['user']]);
+						if ($res === false) {
+							$ret = Utils::ret(-330003, Utils::ERR_DB);
+						} else {
+							$ret = Utils::ret(0, $res);
+						}
 					}
 				}
 				break;

@@ -2,6 +2,9 @@
 
 class Utils {
 	const ERR_EMPTY_PARAM = 'refuse empty params';
+	const ERR_DB = 'database error';
+	const ERR_SVR = 'server error';
+	const ERR_COOKIE_INVALID = 'cookie invalid';
 	
 	static function ret($status, $ret) {
 		return ['status' => $status, 'ret' => $ret];
