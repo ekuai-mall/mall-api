@@ -5,14 +5,26 @@ include_once ROOT_PATH . '/core/utils.php';
 class Order extends WxPay {
 	private $empty;
 	private $cookieValid;
+	private $config;
 	
 	public function __construct($config) {
 		parent::__construct($config['DB_NAME'], $config['DB_USR'], $config['DB_PWD']);
 		$this->cookieValid = $config['COOKIE_VALID'];
+		$this->config = $config;
 	}
 	
 	private function selectCookie($userId, $cookie) {
 		return $this->query("SELECT `id`,`login_time`,`cookie` FROM `ekm_auth_user` WHERE `id` = ? AND `cookie` = ?", [$userId, $cookie]);
+	}
+	
+	private function getOpenid($code) {
+		$ret = Utils::httpRequest('https://api.weixin.qq.com/sns/oauth2/access_token?appid=' . $this->config['APP_ID'] .
+			'&secret=' . $this->config['APP_SECRET'] . '&code=' . $code . '&grant_type=authorization_code');
+		if ($ret['errcode']) {
+			return false;
+		} else {
+			return $ret['openid'];
+		}
 	}
 	
 	private function buy($params) {
@@ -108,6 +120,28 @@ class Order extends WxPay {
 					}
 				}
 				break;
+			
+			case 'generateOrder':
+				if (Utils::isEmpty($params['order'], $params['code'])) {
+					$ret = $this->empty;
+				} else {
+					$res = $this->query('SELECT * from `ekm_order` WHERE `order` = ?', [$params['order']]);
+					if ($res === false) {
+						$ret = Utils::ret(-340001, Utils::ERR_DB);
+					} else if (empty($res)) {
+						$ret = Utils::ret(-340002, 'undefined order');
+					} else {
+						$res = $res[0];
+						$openid = $this->getOpenid($params['code']);
+						if ($openid) {
+							$ret = $this->generateOrder($res['name'], $res['user'], $res['price'], $res['order'], $openid);
+						} else {
+							$ret = Utils::ret(-340003, 'invalid code');
+						}
+					}
+				}
+				break;
+			
 			default:
 				$ret = Utils::ret(-300001, 'request denied');
 				break;
