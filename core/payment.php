@@ -94,7 +94,8 @@ class Order extends WxPay {
 						$ret = Utils::ret(-320001, 'undefined order');
 					} else {
 						$order = $order[0];
-						$resUser = $this->query('SELECT `id`,`user` FROM `ekm_auth_user` WHERE `id`=?', [$order['user']]);
+						$resUser = $this->query('SELECT `id`,`user`,`wechat` FROM `ekm_auth_user` WHERE `id`=?',
+							[$order['user']]);
 						$resUser = $resUser[0];
 						$order['user'] = $resUser;
 						$ret = Utils::ret(0, $order);
