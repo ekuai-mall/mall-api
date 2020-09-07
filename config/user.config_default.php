@@ -7,4 +7,8 @@ $_CONFIG = [
 	'APP_ID' => '',
 	'APP_SECRET' => '',
 	'WX_BIZ' => '',
+	'COS_ID'=>'',
+	'COS_KEY'=>'',
+	'COS_BUCKET'=>'',
+	'COS_REGION'=>'',
 ];
