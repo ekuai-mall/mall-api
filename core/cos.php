@@ -12,30 +12,42 @@ class DoCos extends CosUp {
 	}
 	
 	private function selectCookie($userId, $cookie) {
-		return $this->query("SELECT `id`,`user`,`login_time`,`cookie` FROM `ekm_auth_user` WHERE `id` = ? AND `cookie` =
+		return $this->query("SELECT `id`,`user`,`login_time`,`cookie`,`wechat` FROM `ekm_auth_user` WHERE `id` = ? AND `cookie` =
 		?", [$userId, $cookie]);
+	}
+	
+	private function checkUser($user, $cookie) {
+		$resUser = $this->selectCookie($user, $cookie);
+		if ($resUser === false) {
+			$ret = Utils::ret(-400003, Utils::ERR_DB);
+		} else if (empty($resUser)) {
+			$ret = Utils::ret(-400004, 'invalid cookie');
+		} else if ($resUser[0]['login_time'] + $this->cookieValid < time()) {
+			$ret = Utils::ret(-400005, 'cookie expired');
+		} else if (empty($resUser[0]['wechat'])) {
+			$ret = Utils::ret(-400006, 'wechat error');
+		} else {
+			$ret = Utils::ret(0, $resUser[0]);
+		}
+		return $ret;
 	}
 	
 	private function doNewProj($params) {
 		if (Utils::isEmpty($params['user'], $params['cookie'], $params['order'], $params['proj'])) {
 			$ret = $this->empty;
 		} else {
-			$resUser = $this->selectCookie($params['user'], $params['cookie']);
-			if ($resUser === false) {
-				$ret = Utils::ret(-410001, Utils::ERR_DB);
-			} else if (empty($resUser)) {
-				$ret = Utils::ret(-410002, 'invalid cookie');
-			} else if ($resUser[0]['login_time'] + $this->cookieValid < time()) {
-				$ret = Utils::ret(-410003, 'cookie expired');
+			$resUser = $this->checkUser($params['user'], $params['cookie']);
+			if ($resUser['status'] !== 0) {
+				$ret = $resUser;
 			} else {
 				$res = $this->query("SELECT * from `ekm_order` WHERE `user` = ? AND `order` = ?", [$params['user'],
 					$params['order']]);
 				if ($res === false) {
-					$ret = Utils::ret(-410004, Utils::ERR_DB);
+					$ret = Utils::ret(-410001, Utils::ERR_DB);
 				} else if (empty($res)) {
-					$ret = Utils::ret(-410005, 'order and user not match');
+					$ret = Utils::ret(-410002, 'order and user not match');
 				} else {
-					$ret = parent::newProj($params['user'], $params['proj'], str_replace(' ', '+', $resUser[0]['user'] . '-' . $res[0]['name']), $params['order'], $params['remark'] ? $params['remark'] : '/');
+					$ret = parent::newProj($params['user'], $params['proj'], str_replace(' ', '+', $resUser['ret']['user'] . '-' . $res[0]['name']), $params['order'], $params['remark'] ? $params['remark'] : '/');
 				}
 			}
 		}
@@ -47,6 +59,61 @@ class DoCos extends CosUp {
 		switch ($e[0] ? $e[0] : '') {
 			case 'newProj':
 				$ret = $this->doNewProj($params);
+				break;
+			case 'getProj':
+				if (Utils::isEmpty($params['user'], $params['cookie'], $params['order'])) {
+					$ret = $this->empty;
+				} else {
+					$resUser = $this->checkUser($params['user'], $params['cookie']);
+					if ($resUser['status'] !== 0) {
+						$ret = $resUser;
+					} else {
+						$res = $this->query("SELECT * from `ekm_cos_proj` WHERE `user` = ? AND `order` = ?", [$params['user'], $params['order']]);
+						if ($res === false) {
+							$ret = Utils::ret(-420001, Utils::ERR_DB);
+						} else {
+							$ret = Utils::ret(0, $res[0] ? $res[0] : null);
+						}
+					}
+				}
+				break;
+			case 'getAuth':
+				if (Utils::isEmpty($params['user'], $params['cookie'], $params['order'])) {
+					$ret = $this->empty;
+				} else {
+					$resUser = $this->checkUser($params['user'], $params['cookie']);
+					if ($resUser['status'] !== 0) {
+						$ret = $resUser;
+					} else {
+						$res = $this->query("SELECT * from `ekm_cos_proj` WHERE `user` = ? AND `order` = ?", [$params['user'], $params['order']]);
+						if ($res === false) {
+							$ret = Utils::ret(-430001, Utils::ERR_DB);
+						} else if (empty($res)) {
+							$ret = Utils::ret(-430002, 'project not found');
+						} else {
+							$ret = $this->getAuth($res[0]['name']);
+						}
+					}
+				}
+				break;
+			case 'finish':
+				if (Utils::isEmpty($params['user'], $params['cookie'], $params['order'])) {
+					$ret = $this->empty;
+				} else {
+					$resUser = $this->checkUser($params['user'], $params['cookie']);
+					if ($resUser['status'] !== 0) {
+						$ret = $resUser;
+					} else {
+						$res = $this->query("SELECT * from `ekm_cos_proj` WHERE `user` = ? AND `order` = ?", [$params['user'], $params['order']]);
+						if ($res === false) {
+							$ret = Utils::ret(-440001, Utils::ERR_DB);
+						} else if (empty($res)) {
+							$ret = Utils::ret(-440002, 'project not found');
+						} else {
+							$ret = $this->updateProj($params['order'],'SUBMIT');
+						}
+					}
+				}
 				break;
 			default:
 				$ret = Utils::ret(-400001, 'request denied');

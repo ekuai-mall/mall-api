@@ -25,6 +25,11 @@ switch ($do[0]) {
 		$info = new Info($config);
 		$ret = $info->get(array_slice($do, 1 - count($do)), $_POST);
 		break;
+	case 'cos':
+		include ROOT_PATH . '/core/cos.php';
+		$cos = new DoCos($config);
+		$ret = $cos->get(array_slice($do, 1 - count($do)), $_POST);
+		break;
 	default:
 		$ret = Utils::ret(-100000, 'request denied');
 		break;

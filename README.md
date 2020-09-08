@@ -9,3 +9,4 @@
 - Pay（Order）
 - Item
 - Info（Global Config）
+- Cos Upload
