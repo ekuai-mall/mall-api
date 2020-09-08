@@ -114,8 +114,10 @@ class CosUp {
 		} else {
 			$r1 = $this->query("UPDATE `ekm_cos_proj` SET `status` = ? WHERE `id` = ?;", [$status, $res[0]['id']]);
 			$r2 = $this->query("UPDATE `ekm_order` SET `extra` = ? WHERE `order` = ?;", [$status, $order]);
-			if (!$r1 || !$r2) {
+			if ($r1 === false) {
 				$ret = $this->ret(430003, self::ERR_DB);
+			} else if ($r2 === false) {
+				$ret = $this->ret(430004, self::ERR_DB);
 			} else {
 				$ret = $this->ret(0, 'success');
 			}

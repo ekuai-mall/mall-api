@@ -47,7 +47,7 @@ class DoCos extends CosUp {
 				} else if (empty($res)) {
 					$ret = Utils::ret(-410002, 'order and user not match');
 				} else {
-					$ret = parent::newProj($params['user'], $params['proj'], str_replace(' ', '+', $resUser['ret']['user'] . '-' . $params['proj'] . '-' . $res[0]['name']), $params['order'], $params['remark'] ? $params['remark'] : '/');
+					$ret = parent::newProj($params['user'], $params['proj'], str_replace(' ', '', $resUser['ret']['user'] . '-' . $params['proj'] . '-' . $res[0]['name']), $params['order'], $params['remark'] ? $params['remark'] : '/');
 				}
 			}
 		}
